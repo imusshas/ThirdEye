@@ -17,6 +17,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,12 +32,15 @@ import com.nasiat_muhib_rezaul_niloy_sajid.thirdeye.R
 
 @Composable
 fun AudioRecorderApp(
-    onMicClick: () -> Unit,
-    onPlayStopClick: () -> Unit,
-    recordState: Boolean,
-    playStopState: Boolean,
+    onStartRecord: () -> Unit,
+    onStopRecord: () -> Unit,
+    onPlay: () -> Unit,
+    onStop: () -> Unit,
 ) {
-    val imageId = if(playStopState) R.drawable.stop_button else R.drawable.play_button
+    var recordState by rememberSaveable { mutableStateOf(true) }
+    var playStopState by rememberSaveable { mutableStateOf(true) }
+    var buttonState by rememberSaveable { mutableStateOf(false) }
+    val imageId = if (buttonState && playStopState) R.drawable.stop_button else R.drawable.play_button
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -60,7 +67,16 @@ fun AudioRecorderApp(
                     painter = painterResource(id = R.drawable.mic),
                     contentDescription = null,
                     modifier = Modifier.clickable {
-                        onMicClick()
+                        if (!buttonState) {
+                            if (recordState) {
+                                onStartRecord()
+                                recordState = false
+                            } else {
+                                onStopRecord()
+                                recordState = true
+                                buttonState = true
+                            }
+                        }
                     }
                 )
             }
@@ -68,10 +84,17 @@ fun AudioRecorderApp(
 
         Spacer(modifier = Modifier.fillMaxHeight(0.4f))
 
-        if (!recordState) {
+        if (buttonState) {
             ElevatedButton(
                 onClick = {
-                    onPlayStopClick()
+                    if (playStopState) {
+                        onPlay()
+                        playStopState = false
+                    } else {
+                        onStop()
+                        playStopState = true
+                        buttonState = false
+                    }
                 },
                 shape = CircleShape,
                 modifier = Modifier
@@ -84,9 +107,11 @@ fun AudioRecorderApp(
                 Icon(
                     painter = painterResource(id = imageId),
                     contentDescription = null,
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.size(48.dp).align(Alignment.CenterVertically)
                 )
             }
+        } else {
+            Spacer(modifier = Modifier.height(72.dp))
         }
     }
 }
@@ -94,5 +119,5 @@ fun AudioRecorderApp(
 @Preview(showBackground = true)
 @Composable
 fun AudioRecorderPreview() {
-    AudioRecorderApp({}, {}, playStopState = false, recordState = true)
+    AudioRecorderApp({},{},{},{})
 }

@@ -49,84 +49,31 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ThirdEyeTheme {
-                var recordState by rememberSaveable { mutableStateOf(true) }
-                var playStopState by rememberSaveable { mutableStateOf(true) }
-                val imageId = if(playStopState) R.drawable.stop_button else R.drawable.play_button
 
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
 
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .height(350.dp)
-                                .width(300.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.red_background),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.BottomCenter
-                            ) {
-                                Image(
-                                    painter = painterResource(id = R.drawable.mic),
-                                    contentDescription = null,
-                                    modifier = Modifier.clickable {
-                                        if (recordState) {
-                                            File(cacheDir, "audio.mp3").also {
-                                                recorder.startRecording(it)
-                                                audioFile = it
-                                            }
-                                            recordState = false
-                                        } else {
-                                            recorder.stopRecording()
-                                            playStopState = true
-                                        }
-                                    }
-                                )
+
+                    AudioRecorderApp(
+                        onStartRecord = {
+                            File(cacheDir, "audio.mp3").also {
+                                recorder.startRecording(it)
+                                audioFile = it
                             }
+                        },
+
+                        onStopRecord = {
+                            recorder.stopRecording()
+                        },
+                        onPlay = {
+                            player.playAudio(audioFile ?: return@AudioRecorderApp)
+                        },
+                        onStop = {
+                            player.stopAudio()
                         }
-
-                        Spacer(modifier = Modifier.fillMaxHeight(0.4f))
-
-                        if (!recordState) {
-                            ElevatedButton(
-                                onClick = {
-                                    if (playStopState) {
-                                        player.playAudio(audioFile ?: return@ElevatedButton)
-                                    } else {
-                                        player.stopAudio()
-                                        recordState = true
-                                    }
-                                },
-                                shape = CircleShape,
-                                modifier = Modifier
-                                    .size(72.dp),
-                                colors = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = Color.Red,
-                                    contentColor = Color.White
-                                )
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = imageId),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(48.dp)
-                                )
-                            }
-                        }
-                    }
-
+                    )
                 }
             }
         }
